@@ -1,0 +1,32 @@
+{
+  "name": "speech-simulation-game",
+  "version": "1.0.0",
+  "description": "一个3D演讲模拟游戏，用于帮助人们克服公开演讲焦虑",
+  "main": "index.js",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "speech",
+    "simulation",
+    "3d",
+    "therapy",
+    "game"
+  ],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "devDependencies": {
+    "eslint": "^9.27.0",
+    "prettier": "^3.5.3",
+    "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
+    "howler": "^2.2.4",
+    "stats.js": "^0.17.0",
+    "three": "^0.176.0"
+  }
+}
