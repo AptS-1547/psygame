@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 class LectureScene {
   constructor() {
@@ -53,6 +52,9 @@ class LectureScene {
       }
     });
     this.changeViewpoint('stage');
+    
+    // 添加视角切换方法的引用，可以由外部调用
+    this.changeViewCallback = this.changeViewpoint.bind(this);
   }
   
   setupEnvironment() {

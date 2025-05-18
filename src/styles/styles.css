@@ -1,0 +1,256 @@
+/* 基础样式 */
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
+/* 场景容器 */
+#scene-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+}
+
+/* 加载屏幕 */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  transition: opacity 0.5s ease;
+}
+
+.loading-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(26, 115, 232, 0.2);
+  border-left: 4px solid #1a73e8;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #5f6368;
+}
+
+.loading-progress {
+  margin-top: 15px;
+  width: 200px;
+  height: 4px;
+  background-color: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #1a73e8;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+/* 动画 */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 全屏按钮 */
+.fullscreen-button {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+}
+
+.fullscreen-button:hover {
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  transform: scale(1.05);
+}
+
+.fullscreen-icon {
+  width: 20px;
+  height: 20px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a73e8'%3E%3Cpath d='M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z'/%3E%3C/svg%3E");
+  background-size: cover;
+}
+
+/* 自适应样式 */
+@media (max-width: 768px) {
+  .fullscreen-button {
+    top: 10px;
+    left: 10px;
+    width: 36px;
+    height: 36px;
+  }
+  
+  .fullscreen-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* UI 组件动画修复 */
+.screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(240,240,240,0.95) 100%);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  overflow-y: auto;
+  z-index: 900;
+}
+
+.screen.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 避免动画冲突 */
+.ui-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 900;
+  pointer-events: auto;
+}
+
+/* 按钮样式 */
+.btn {
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  margin-top: 1.5rem;
+  outline: none;
+}
+
+.btn:hover {
+  background-color: #0d62d3;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* 确保定位和过渡不冲突 */
+.timer {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: #1a73e8;
+  padding: 0.8rem 1.5rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.timer.warning {
+  color: #f57c00;
+}
+
+.timer.danger {
+  color: #d32f2f;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.05); }
+  100% { transform: translateX(-50%) scale(1); }
+}
+
+/* 演讲界面相关样式 */
+.speech-mode .ui-container {
+  pointer-events: none;
+}
+
+.speech-mode .timer,
+.speech-mode .viewpoint-controls,
+.speech-mode .btn {
+  pointer-events: auto;
+}
+
+/* 在演讲模式下调整视角控制位置和样式 */
+.speech-mode .viewpoint-controls {
+  position: fixed;
+  top: 1rem;
+  right: 2rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50px;
+  padding: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+
+.viewpoint-controls {
+  position: fixed;
+  top: 1rem;
+  right: 2rem;
+  display: flex;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50px;
+  padding: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 1000;
+  pointer-events: auto;
+}
