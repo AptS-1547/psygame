@@ -47,20 +47,41 @@ class SpeechApp {
         console.log('摄像头重载结果:', success ? '成功' : '失败');
       }
     });
+
+    // 添加摄像头相关事件监听器
+    window.addEventListener('list-cameras', async () => {
+      console.log('请求列出可用摄像头');
+      const cameras = await this.cameraManager.enumerateCameras();
+      this.ui.updateCameraList(cameras);
+    });
+    
+    window.addEventListener('select-camera', (event) => {
+      console.log('选择摄像头:', event.detail.deviceId);
+      this.cameraManager.selectCamera(event.detail.deviceId);
+    });
   }
   
   startPreparation() {
     this.ui.showPreparation((topic, useCameraOption) => {
-      this.startSpeech(topic, useCameraOption);
+      // 获取选定的摄像头设备ID（如果有）
+      const cameraSelect = document.getElementById('camera-select');
+      const selectedCameraId = cameraSelect && useCameraOption ? cameraSelect.value : null;
+      
+      this.startSpeech(topic, useCameraOption, selectedCameraId);
     });
   }
   
-  async startSpeech(topic, useCameraOption = false) {
-    console.log(`开始演讲，主题: ${topic}，使用摄像头: ${useCameraOption}`);
+  async startSpeech(topic, useCameraOption = false, selectedCameraId = null) {
+    console.log(`开始演讲，主题: ${topic}，使用摄像头: ${useCameraOption}，摄像头ID: ${selectedCameraId}`);
     
     // 如果选择使用摄像头，启动摄像头
     if (useCameraOption) {
       try {
+        // 如果指定了摄像头ID，先选择该摄像头
+        if (selectedCameraId) {
+          this.cameraManager.selectCamera(selectedCameraId);
+        }
+        
         // 添加调试视频预览
         const debugVideo = document.getElementById('debug-video');
         if (debugVideo) {

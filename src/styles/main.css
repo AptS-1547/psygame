@@ -112,6 +112,43 @@ button:active {
   text-align: left;
 }
 
+/* 摄像头选择下拉菜单样式 */
+#camera-select {
+  appearance: none;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  width: 100%;
+  font-size: 1rem;
+  color: #333;
+  transition: all 0.2s ease;
+  margin-top: 5px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3e%3cpath fill='none' d='M0 0h24v24H0z'/%3e%3cpath d='M12 15l-4.243-4.243 1.415-1.414L12 12.172l2.828-2.829 1.415 1.414z' fill='rgba(0,0,0,0.4)'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+}
+
+#camera-select:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+#camera-select option {
+  padding: 10px;
+}
+
+#camera-options {
+  background-color: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 10px;
+  transition: all 0.3s ease;
+}
+
 /* 适配移动设备 */
 @media (max-width: 768px) {
   .screen {

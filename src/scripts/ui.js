@@ -509,7 +509,7 @@ class UI {
     `;
     contentContainer.appendChild(tipsSection);
     
-    // 添加摄像头选项
+    // 添加摄像头选项部分
     const cameraSection = document.createElement('div');
     cameraSection.innerHTML = `
       <h3 style="color: #1a73e8; margin: 1.5rem 0; font-weight: 400;">摄像头选项</h3>
@@ -521,7 +521,36 @@ class UI {
         </label>
         <span class="toggle-label">打开摄像头（将出现在讲台中央）</span>
       </div>
+      
+      <div id="camera-options" style="margin-top: 10px; display: none;">
+        <label for="camera-select" style="display: block; margin-bottom: 5px;">选择摄像头:</label>
+        <select id="camera-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+          <option value="">正在加载可用摄像头...</option>
+        </select>
+      </div>
     `;
+    
+    contentContainer.appendChild(cameraSection);
+    
+    // 添加摄像头开关切换事件
+    setTimeout(() => {
+      const cameraToggle = document.getElementById('camera-toggle');
+      const cameraOptions = document.getElementById('camera-options');
+      
+      if (cameraToggle) {
+        cameraToggle.addEventListener('change', (e) => {
+          if (cameraOptions) {
+            cameraOptions.style.display = e.target.checked ? 'block' : 'none';
+          }
+          
+          // 当打开摄像头选项时，触发获取摄像头列表的事件
+          if (e.target.checked) {
+            const event = new CustomEvent('list-cameras');
+            window.dispatchEvent(event);
+          }
+        });
+      }
+    }, 100);
     
     // 添加开关样式
     const style = document.createElement('style');
@@ -584,8 +613,6 @@ class UI {
       }
     `;
     document.head.appendChild(style);
-    
-    contentContainer.appendChild(cameraSection);
     
     // 添加开始演讲按钮
     const buttonContainer = document.createElement('div');
@@ -862,6 +889,42 @@ class UI {
     if (existingControls && existingControls.parentNode === document.body) {
       existingControls.remove();
     }
+  }
+
+  /**
+   * 更新摄像头选择下拉列表
+   * @param {Array} cameras 摄像头设备列表
+   */
+  updateCameraList(cameras) {
+    const cameraSelect = document.getElementById('camera-select');
+    if (!cameraSelect) return;
+    
+    // 清除现有选项
+    cameraSelect.innerHTML = '';
+    
+    if (cameras.length === 0) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = '没有发现可用摄像头';
+      cameraSelect.appendChild(option);
+      return;
+    }
+    
+    // 添加每个摄像头作为选项
+    cameras.forEach((camera, index) => {
+      const option = document.createElement('option');
+      option.value = camera.deviceId;
+      option.textContent = camera.label || `摄像头 ${index + 1}`;
+      cameraSelect.appendChild(option);
+    });
+    
+    // 添加选择事件监听器
+    cameraSelect.addEventListener('change', (e) => {
+      const event = new CustomEvent('select-camera', {
+        detail: { deviceId: e.target.value }
+      });
+      window.dispatchEvent(event);
+    });
   }
 }
 

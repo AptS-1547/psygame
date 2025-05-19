@@ -17,7 +17,59 @@ class CameraManager {
     this.videoHeight = 480;
     this.isEdge = navigator.userAgent.indexOf('Edge') !== -1;
     
+    this.cameras = []; // 存储可用摄像头列表
+    this.selectedCameraId = null; // 当前选择的摄像头ID
+    
+    // 初始化时获取可用摄像头列表
+    this.enumerateCameras();
+    
     console.log('摄像头管理器已初始化');
+  }
+  
+  /**
+   * 获取所有可用摄像头设备
+   * @returns {Promise<Array>} 摄像头设备列表
+   */
+  async enumerateCameras() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      this.cameras = devices.filter(device => device.kind === 'videoinput');
+      console.log('发现可用摄像头:', this.cameras.length, this.cameras);
+      
+      // 默认选择第一个摄像头
+      if (this.cameras.length > 0 && !this.selectedCameraId) {
+        this.selectedCameraId = this.cameras[0].deviceId;
+      }
+      
+      return this.cameras;
+    } catch (error) {
+      console.error('获取摄像头列表失败:', error);
+      this.cameras = [];
+      return [];
+    }
+  }
+  
+  /**
+   * 设置要使用的摄像头
+   * @param {string} deviceId 摄像头设备ID
+   */
+  selectCamera(deviceId) {
+    // 检查是否是有效的摄像头ID
+    const validCamera = this.cameras.find(cam => cam.deviceId === deviceId);
+    if (validCamera) {
+      this.selectedCameraId = deviceId;
+      console.log('已选择摄像头:', validCamera.label || `设备ID: ${deviceId}`);
+      
+      // 如果摄像头已经激活，重新启动以使用新选择的摄像头
+      if (this.active) {
+        this.stopCapture().then(() => this.startCapture());
+      }
+      
+      return true;
+    } else {
+      console.error('无效的摄像头ID:', deviceId);
+      return false;
+    }
   }
   
   /**
@@ -33,15 +85,23 @@ class CameraManager {
       
       console.log('开始请求摄像头权限...');
       
-      // 请求摄像头权限并获取流
-      this.stream = await navigator.mediaDevices.getUserMedia({
+      // 构建媒体约束参数，如果有选择的摄像头ID则使用它
+      const constraints = {
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
           facingMode: 'user'
         },
         audio: false
-      });
+      };
+      
+      // 如果有指定摄像头，则使用该设备ID
+      if (this.selectedCameraId) {
+        constraints.video.deviceId = { exact: this.selectedCameraId };
+      }
+      
+      // 请求摄像头权限并获取流
+      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
       
       console.log('已获取摄像头流，应用到视频元素...');
       
