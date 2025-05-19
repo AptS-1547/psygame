@@ -40,6 +40,24 @@ class LectureScene {
     // 初始化演讲者屏幕变量，避免后续为null
     this.presenterScreen = null;
     
+    // 添加鼠标控制相关变量
+    this.mouseControls = {
+      active: false,     // 鼠标控制是否激活
+      startX: 0,         // 鼠标起始X位置
+      startY: 0,         // 鼠标起始Y位置
+      cameraRotation: {  // 相机旋转角度
+        x: 0,
+        y: 0
+      },
+      sensitivity: 0.003, // 鼠标灵敏度
+      dampingFactor: 0.92 // 阻尼系数，使运动更平滑
+    };
+    
+    // 绑定鼠标控制方法
+    this.onMouseDown = this.onMouseDown.bind(this);
+    this.onMouseMove = this.onMouseMove.bind(this);
+    this.onMouseUp = this.onMouseUp.bind(this);
+    
     this.setupEnvironment();
     this.createAudience();
     this.createVenue();
@@ -357,8 +375,179 @@ class LectureScene {
     });
   }
   
+  // 鼠标控制相关方法
+  enableMouseControls() {
+    if (this.mouseControls.active) return;
+    
+    this.mouseControls.active = true;
+    document.addEventListener('mousedown', this.onMouseDown);
+    document.addEventListener('mousemove', this.onMouseMove);
+    document.addEventListener('mouseup', this.onMouseUp);
+    
+    // 添加鼠标控制提示
+    const helpText = document.createElement('div');
+    helpText.id = 'mouse-control-help';
+    helpText.style.cssText = `
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      z-index: 1000;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    `;
+    helpText.textContent = '按住鼠标左键并拖动来调整视角';
+    document.body.appendChild(helpText);
+    
+    // 显示提示文本一段时间后淡出
+    setTimeout(() => {
+      helpText.style.opacity = '1';
+      setTimeout(() => {
+        helpText.style.opacity = '0';
+      }, 3000);
+    }, 500);
+    
+    console.log('鼠标控制已启用');
+  }
+  
+  disableMouseControls() {
+    if (!this.mouseControls.active) return;
+    
+    this.mouseControls.active = false;
+    document.removeEventListener('mousedown', this.onMouseDown);
+    document.removeEventListener('mousemove', this.onMouseMove);
+    document.removeEventListener('mouseup', this.onMouseUp);
+    
+    // 移除帮助提示
+    const helpText = document.getElementById('mouse-control-help');
+    if (helpText) {
+      helpText.remove();
+    }
+    
+    console.log('鼠标控制已禁用');
+  }
+  
+  onMouseDown(event) {
+    // 只响应左键点击，并且不响应UI元素上的点击
+    if (event.button !== 0 || event.target.closest('.viewpoint-controls, .timer, .btn')) return;
+    
+    this.mouseControls.startX = event.clientX;
+    this.mouseControls.startY = event.clientY;
+    
+    // 添加一个视觉提示，表明正在调整视角
+    document.body.style.cursor = 'grabbing';
+    
+    // 阻止拖动时的文本选择
+    event.preventDefault();
+  }
+  
+  onMouseMove(event) {
+    if (event.buttons !== 1 || !this.mouseControls.active) return;
+    
+    // 计算鼠标移动的距离
+    const deltaX = event.clientX - this.mouseControls.startX;
+    const deltaY = event.clientY - this.mouseControls.startY;
+    
+    // 更新起始点
+    this.mouseControls.startX = event.clientX;
+    this.mouseControls.startY = event.clientY;
+    
+    // 更新相机旋转角度
+    this.mouseControls.cameraRotation.y -= deltaX * this.mouseControls.sensitivity;
+    this.mouseControls.cameraRotation.x -= deltaY * this.mouseControls.sensitivity;
+    
+    // 限制上下旋转角度，避免相机翻转
+    this.mouseControls.cameraRotation.x = Math.max(
+      -Math.PI / 3, 
+      Math.min(Math.PI / 3, this.mouseControls.cameraRotation.x)
+    );
+    
+    // 应用旋转到相机
+    this.applyCustomRotation();
+  }
+  
+  onMouseUp() {
+    // 恢复默认光标
+    document.body.style.cursor = '';
+  }
+  
+  applyCustomRotation() {
+    // 根据当前视角确定基础视点和目标
+    let basePosition, targetPosition;
+    
+    switch (this.currentViewpoint) {
+      case 'stage':
+        basePosition = new THREE.Vector3(0, 1.7, 0.5);
+        targetPosition = new THREE.Vector3(0, 1.7, -10);
+        break;
+      case 'audience':
+        basePosition = new THREE.Vector3(0, 1.4, -8);
+        targetPosition = new THREE.Vector3(0, 1.7, 0);
+        break;
+      case 'side':
+        basePosition = new THREE.Vector3(8, 3, -5);
+        targetPosition = new THREE.Vector3(0, 1.7, 0);
+        break;
+      default:
+        basePosition = new THREE.Vector3(0, 1.7, 0.5);
+        targetPosition = new THREE.Vector3(0, 1.7, -10);
+    }
+    
+    // 计算从基础位置到目标的方向向量
+    const direction = new THREE.Vector3().subVectors(targetPosition, basePosition).normalize();
+    
+    // 计算上下移动的辅助向量 (向上的单位向量)
+    const upVector = new THREE.Vector3(0, 1, 0);
+    
+    // 计算水平旋转轴（与原方向垂直的水平向量）
+    const rightVector = new THREE.Vector3().crossVectors(direction, upVector).normalize();
+    
+    // 创建基于垂直和水平旋转的四元数
+    const verticalRotation = new THREE.Quaternion().setFromAxisAngle(
+      rightVector, 
+      this.mouseControls.cameraRotation.x
+    );
+    
+    const horizontalRotation = new THREE.Quaternion().setFromAxisAngle(
+      upVector, 
+      this.mouseControls.cameraRotation.y
+    );
+    
+    // 组合两个旋转
+    const combinedRotation = new THREE.Quaternion().multiplyQuaternions(horizontalRotation, verticalRotation);
+    
+    // 应用旋转到方向向量
+    const rotatedDirection = direction.clone().applyQuaternion(combinedRotation);
+    
+    // 计算新的相机位置
+    this.camera.position.copy(basePosition);
+    
+    // 计算新的目标点
+    const distance = basePosition.distanceTo(targetPosition);
+    const newTarget = new THREE.Vector3().addVectors(
+      basePosition, 
+      rotatedDirection.multiplyScalar(distance)
+    );
+    
+    // 设置相机朝向新的目标点
+    this.camera.lookAt(newTarget);
+  }
+  
   // 切换视角函数
   changeViewpoint(viewpoint) {
+    // 保存当前选择的视角
+    this.currentViewpoint = viewpoint;
+    
+    // 重置鼠标控制的旋转角度
+    this.mouseControls.cameraRotation.x = 0;
+    this.mouseControls.cameraRotation.y = 0;
+    
     switch(viewpoint) {
       case 'stage':
         // 讲台视角 - 调整为更自然的水平视角
@@ -452,6 +641,9 @@ class LectureScene {
     if (this.presenterScreen && this.presenterScreen.material) {
       this.presenterScreen.material.dispose();
     }
+    
+    // 清理鼠标控制
+    this.disableMouseControls();
     
     console.log('场景资源已清理');
   }

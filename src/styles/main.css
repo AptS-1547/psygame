@@ -149,6 +149,31 @@ button:active {
   transition: all 0.3s ease;
 }
 
+/* 鼠标控制相关样式 */
+body.grabbing {
+  cursor: grabbing !important;
+}
+
+.mouse-control-active .viewpoint-controls {
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
+
+.mouse-control-active .viewpoint-controls:hover {
+  opacity: 1;
+}
+
+.control-note {
+  animation: fadeInOut 5s forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* 适配移动设备 */
 @media (max-width: 768px) {
   .screen {

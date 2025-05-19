@@ -731,6 +731,32 @@ class UI {
     // 将视角控制添加到页面
     document.body.appendChild(viewpointControls);
     
+    // 增加鼠标控制提示
+    const controlNote = document.createElement('div');
+    controlNote.className = 'control-note';
+    controlNote.textContent = '提示：你可以按住鼠标左键并拖动来自由调整视角';
+    controlNote.style.cssText = `
+      position: fixed;
+      top: 4rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 30px;
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      color: #555;
+      z-index: 1000;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    `;
+    document.body.appendChild(controlNote);
+    
+    // 5秒后隐藏提示
+    setTimeout(() => {
+      controlNote.style.opacity = '0';
+    }, 5000);
+    
     // 在页面上添加一个标记类，以便应用特定样式
     document.body.classList.add('speech-mode');
     
@@ -888,6 +914,12 @@ class UI {
     const existingControls = document.querySelector('.viewpoint-controls');
     if (existingControls && existingControls.parentNode === document.body) {
       existingControls.remove();
+    }
+    
+    // 移除鼠标控制提示
+    const controlNote = document.querySelector('.control-note');
+    if (controlNote && controlNote.parentNode) {
+      controlNote.parentNode.removeChild(controlNote);
     }
   }
 

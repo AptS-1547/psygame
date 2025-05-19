@@ -112,6 +112,9 @@ class SpeechApp {
     // 启动演讲界面，传入视角切换回调
     this.ui.showSpeech(this.lectureScene.changeViewCallback);
     
+    // 启用鼠标控制摄像机
+    this.lectureScene.enableMouseControls();
+    
     // 开始计时器
     this.remainingTime = 180; // 3分钟 = 180秒
     this.updateTimer();
@@ -147,6 +150,9 @@ class SpeechApp {
     
     // 清除讲台上的视频
     this.lectureScene.updatePresenterVideo(null);
+    
+    // 禁用鼠标控制
+    this.lectureScene.disableMouseControls();
     
     // 模拟评分结果（这里应该是真实分析的结果）
     const result = {
