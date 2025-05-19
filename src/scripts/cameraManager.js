@@ -1,6 +1,5 @@
 /**
  * 摄像头管理器 - 负责摄像头捕获和处理
- * 包含对 Windows Edge 浏览器的特殊兼容性处理
  */
 class CameraManager {
   constructor() {
@@ -16,6 +15,9 @@ class CameraManager {
     this.texture = null;
     this.videoWidth = 640;
     this.videoHeight = 480;
+    this.isEdge = navigator.userAgent.indexOf('Edge') !== -1;
+    
+    console.log('摄像头管理器已初始化');
   }
   
   /**
@@ -29,6 +31,8 @@ class CameraManager {
         this.stopCapture();
       }
       
+      console.log('开始请求摄像头权限...');
+      
       // 请求摄像头权限并获取流
       this.stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -38,6 +42,8 @@ class CameraManager {
         },
         audio: false
       });
+      
+      console.log('已获取摄像头流，应用到视频元素...');
       
       // 将流设置到视频元素
       this.videoElement.srcObject = this.stream;
@@ -49,9 +55,28 @@ class CameraManager {
           this.videoWidth = this.videoElement.videoWidth;
           this.videoHeight = this.videoElement.videoHeight;
           console.log('摄像头已启动', this.videoWidth, this.videoHeight);
-          this.videoElement.play();
-          resolve(true);
+          this.videoElement.play().then(() => {
+            console.log('视频播放已开始');
+            resolve(true);
+          }).catch(err => {
+            console.error('视频播放失败', err);
+            resolve(false);
+          });
         };
+        
+        // 添加错误处理
+        this.videoElement.onerror = (err) => {
+          console.error('视频元素错误:', err);
+          resolve(false);
+        };
+        
+        // 添加超时处理
+        setTimeout(() => {
+          if (!this.active) {
+            console.warn('等待摄像头超时');
+            resolve(false);
+          }
+        }, 10000); // 10秒超时
       });
     } catch (error) {
       console.error('无法访问摄像头:', error);

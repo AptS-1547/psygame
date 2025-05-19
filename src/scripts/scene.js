@@ -36,6 +36,10 @@ class LectureScene {
     
     // 初始化场景元素
     this.audienceModels = [];
+    
+    // 初始化演讲者屏幕变量，避免后续为null
+    this.presenterScreen = null;
+    
     this.setupEnvironment();
     this.createAudience();
     this.createVenue();
@@ -55,9 +59,6 @@ class LectureScene {
     
     // 添加视角切换方法的引用，可以由外部调用
     this.changeViewCallback = this.changeViewpoint.bind(this);
-
-    // 添加存储讲台屏幕的变量
-    this.presenterScreen = null;
   }
   
   setupEnvironment() {
@@ -189,8 +190,14 @@ class LectureScene {
     
     podiumGroup.add(this.presenterScreen);
     
-    podiumGroup.position.set(0, 0, -1);
+    // 将演讲台移到前面，使其更加明显
+    podiumGroup.position.set(0, 0, -0.5);
+    
+    // 确保演讲台已经添加到场景中
     this.scene.add(podiumGroup);
+
+    // 记录已添加屏幕到日志
+    console.log('演讲者屏幕已初始化', this.presenterScreen);
     
     // 创建投影屏幕
     const screenGeometry = new THREE.PlaneGeometry(10, 6);
@@ -376,6 +383,9 @@ class LectureScene {
    * @param {THREE.Texture} texture 视频纹理
    */
   updatePresenterVideo(texture) {
+    // 增加更详细的日志信息
+    console.log("尝试更新演讲者视频", this.presenterScreen ? "屏幕已就绪" : "屏幕未初始化");
+    
     if (!this.presenterScreen) {
       console.error("演讲者屏幕未初始化");
       return;

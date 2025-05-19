@@ -169,11 +169,17 @@ class SpeechApp {
     // 如果摄像头激活，更新视频纹理
     if (this.cameraManager && this.cameraManager.active) {
       try {
-        const videoTexture = this.cameraManager.getVideoTexture(THREE);
-        if (videoTexture) {
-          // 确保每一帧都更新视频纹理
-          videoTexture.needsUpdate = true;
-          this.lectureScene.updatePresenterVideo(videoTexture);
+        // 确认讲台屏幕已初始化
+        if (!this.lectureScene.presenterScreen) {
+          console.warn('讲台屏幕尚未初始化，等待...');
+          // 跳过这一帧的视频更新
+        } else {
+          const videoTexture = this.cameraManager.getVideoTexture(THREE);
+          if (videoTexture) {
+            // 确保每一帧都更新视频纹理
+            videoTexture.needsUpdate = true;
+            this.lectureScene.updatePresenterVideo(videoTexture);
+          }
         }
       } catch (e) {
         console.error('更新视频纹理时出错:', e);
