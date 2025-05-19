@@ -27,15 +27,7 @@ class SpeechApp {
     this.ui = new UI();
     
     // 检查摄像头可用性
-    let cameraAvailable = false;
-    try {
-      cameraAvailable = await CameraManager.checkAvailability();
-    } catch (error) {
-      console.warn('检查摄像头可用性时出错，假设摄像头不可用', error);
-      cameraAvailable = false;
-    }
-    
-    console.log('摄像头是否可用:', cameraAvailable);
+    const cameraAvailable = await CameraManager.checkAvailability();
     
     // 显示介绍屏幕
     this.ui.showIntro(() => {
@@ -45,6 +37,16 @@ class SpeechApp {
     // 开始渲染循环
     this.lastTime = 0;
     this.animate();
+    
+    // 添加摄像头重载事件监听器
+    window.addEventListener('reload-camera', async () => {
+      console.log('尝试重新加载摄像头...');
+      if (this.cameraManager) {
+        await this.cameraManager.stopCapture();
+        const success = await this.cameraManager.startCapture();
+        console.log('摄像头重载结果:', success ? '成功' : '失败');
+      }
+    });
   }
   
   startPreparation() {
@@ -59,10 +61,26 @@ class SpeechApp {
     // 如果选择使用摄像头，启动摄像头
     if (useCameraOption) {
       try {
+        // 添加调试视频预览
+        const debugVideo = document.getElementById('debug-video');
+        if (debugVideo) {
+          debugVideo.style.display = 'block';
+        }
+        
+        console.log('启动摄像头...');
         const success = await this.cameraManager.startCapture();
+        
+        // 连接调试视频
+        if (success && debugVideo && this.cameraManager.stream) {
+          debugVideo.srcObject = this.cameraManager.stream;
+          console.log('设置了调试视频预览');
+        }
+        
         if (!success) {
           console.warn('摄像头启动失败，继续无摄像头模式');
           alert('摄像头启动失败，将继续无摄像头模式。请检查您的浏览器是否具有摄像头访问权限。');
+        } else {
+          console.log('摄像头启动成功');
         }
       } catch (error) {
         console.error('启动摄像头时发生错误:', error);
@@ -94,6 +112,13 @@ class SpeechApp {
   }
   
   endSpeech() {
+    // 隐藏调试视频
+    const debugVideo = document.getElementById('debug-video');
+    if (debugVideo) {
+      debugVideo.style.display = 'none';
+      debugVideo.srcObject = null;
+    }
+    
     // 停止摄像头捕获
     if (this.cameraManager) {
       this.cameraManager.stopCapture();
@@ -146,6 +171,8 @@ class SpeechApp {
       try {
         const videoTexture = this.cameraManager.getVideoTexture(THREE);
         if (videoTexture) {
+          // 确保每一帧都更新视频纹理
+          videoTexture.needsUpdate = true;
           this.lectureScene.updatePresenterVideo(videoTexture);
         }
       } catch (e) {

@@ -632,6 +632,28 @@ class UI {
       this.speechScreen.removeChild(this.speechScreen.lastChild);
     }
     
+    // 添加调试按钮，可以重新加载摄像头
+    const debugContainer = document.createElement('div');
+    debugContainer.style.position = 'fixed';
+    debugContainer.style.left = '10px';
+    debugContainer.style.bottom = '10px';
+    debugContainer.style.zIndex = '1000';
+    debugContainer.style.pointerEvents = 'auto';
+    
+    const reloadCameraBtn = document.createElement('button');
+    reloadCameraBtn.textContent = '重载摄像头';
+    reloadCameraBtn.className = 'btn btn-secondary';
+    reloadCameraBtn.style.fontSize = '0.8rem';
+    reloadCameraBtn.style.padding = '5px 10px';
+    reloadCameraBtn.addEventListener('click', () => {
+      // 发布一个事件，让主应用重新加载摄像头
+      const event = new CustomEvent('reload-camera');
+      window.dispatchEvent(event);
+    });
+    
+    debugContainer.appendChild(reloadCameraBtn);
+    document.body.appendChild(debugContainer);
+    
     // 添加计时器 - 直接添加到body以确保显示
     const timer = document.createElement('div');
     timer.id = 'timer';

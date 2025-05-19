@@ -182,6 +182,11 @@ class LectureScene {
     this.presenterScreen = new THREE.Mesh(presenterScreenGeometry, defaultMaterial);
     this.presenterScreen.position.set(0, 1.5, -0.9); // 位于讲台上方
     this.presenterScreen.rotation.x = -Math.PI * 0.05; // 略微倾斜
+    
+    // 添加调试提示 - 在屏幕周围添加边框以便识别
+    const presenterScreenBorder = new THREE.BoxHelper(this.presenterScreen, 0xffff00);
+    podiumGroup.add(presenterScreenBorder);
+    
     podiumGroup.add(this.presenterScreen);
     
     podiumGroup.position.set(0, 0, -1);
@@ -371,23 +376,41 @@ class LectureScene {
    * @param {THREE.Texture} texture 视频纹理
    */
   updatePresenterVideo(texture) {
-    if (!this.presenterScreen) return;
+    if (!this.presenterScreen) {
+      console.error("演讲者屏幕未初始化");
+      return;
+    }
     
     if (texture) {
+      console.log("更新视频纹理到演讲者屏幕");
       // 如果提供了纹理，创建新的材质
       const videoMaterial = new THREE.MeshBasicMaterial({ 
         map: texture,
         side: THREE.DoubleSide 
       });
-      this.presenterScreen.material.dispose();
-      this.presenterScreen.material = videoMaterial;
+      
+      // 处理纹理翻转问题 - 摄像头通常需要水平翻转
+      texture.center = new THREE.Vector2(0.5, 0.5);
+      texture.rotation = Math.PI; // 旋转180度
+      
+      // 清理旧材质并应用新材质
+      if (this.presenterScreen.material) {
+        if (this.presenterScreen.material.map !== texture) {
+          this.presenterScreen.material.dispose();
+          this.presenterScreen.material = videoMaterial;
+        }
+      } else {
+        this.presenterScreen.material = videoMaterial;
+      }
     } else {
       // 如果没有纹理，恢复默认材质
       const defaultMaterial = new THREE.MeshBasicMaterial({ 
         color: 0x333333,
         side: THREE.DoubleSide
       });
-      this.presenterScreen.material.dispose();
+      if (this.presenterScreen.material) {
+        this.presenterScreen.material.dispose();
+      }
       this.presenterScreen.material = defaultMaterial;
     }
   }
