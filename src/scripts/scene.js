@@ -55,6 +55,9 @@ class LectureScene {
     
     // 添加视角切换方法的引用，可以由外部调用
     this.changeViewCallback = this.changeViewpoint.bind(this);
+
+    // 添加存储讲台屏幕的变量
+    this.presenterScreen = null;
   }
   
   setupEnvironment() {
@@ -169,6 +172,17 @@ class LectureScene {
     podiumBase.position.y = 0.6;
     podiumBase.castShadow = true;
     podiumGroup.add(podiumBase);
+    
+    // 创建讲台上的演讲者显示屏幕
+    const presenterScreenGeometry = new THREE.PlaneGeometry(0.8, 0.6);
+    const defaultMaterial = new THREE.MeshBasicMaterial({ 
+      color: 0x333333,
+      side: THREE.DoubleSide
+    });
+    this.presenterScreen = new THREE.Mesh(presenterScreenGeometry, defaultMaterial);
+    this.presenterScreen.position.set(0, 1.5, -0.9); // 位于讲台上方
+    this.presenterScreen.rotation.x = -Math.PI * 0.05; // 略微倾斜
+    podiumGroup.add(this.presenterScreen);
     
     podiumGroup.position.set(0, 0, -1);
     this.scene.add(podiumGroup);
@@ -351,6 +365,32 @@ class LectureScene {
         break;
     }
   }
+
+  /**
+   * 更新演讲者摄像头画面
+   * @param {THREE.Texture} texture 视频纹理
+   */
+  updatePresenterVideo(texture) {
+    if (!this.presenterScreen) return;
+    
+    if (texture) {
+      // 如果提供了纹理，创建新的材质
+      const videoMaterial = new THREE.MeshBasicMaterial({ 
+        map: texture,
+        side: THREE.DoubleSide 
+      });
+      this.presenterScreen.material.dispose();
+      this.presenterScreen.material = videoMaterial;
+    } else {
+      // 如果没有纹理，恢复默认材质
+      const defaultMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0x333333,
+        side: THREE.DoubleSide
+      });
+      this.presenterScreen.material.dispose();
+      this.presenterScreen.material = defaultMaterial;
+    }
+  }
   
   // 销毁和清理场景资源
   dispose() {
@@ -371,6 +411,11 @@ class LectureScene {
     const container = document.getElementById('scene-container');
     if (container && this.renderer.domElement) {
       container.removeChild(this.renderer.domElement);
+    }
+
+    // 清理材质
+    if (this.presenterScreen && this.presenterScreen.material) {
+      this.presenterScreen.material.dispose();
     }
     
     console.log('场景资源已清理');

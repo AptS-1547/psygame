@@ -8,6 +8,7 @@ import LectureScene from './scene.js';
 import AudienceSystem from './audience.js';
 import SpeechAnalyzer from './speechAnalyzer.js';
 import ScoringSystem from './scoring.js';
+import CameraManager from './cameraManager.js';
 import UI from './ui.js';
 
 class SpeechApp {
@@ -15,17 +16,31 @@ class SpeechApp {
     this.init();
   }
   
-  init() {
+  async init() {
     // 初始化场景
     this.lectureScene = new LectureScene();
+    
+    // 初始化摄像头管理器
+    this.cameraManager = new CameraManager();
     
     // 初始化UI
     this.ui = new UI();
     
+    // 检查摄像头可用性
+    let cameraAvailable = false;
+    try {
+      cameraAvailable = await CameraManager.checkAvailability();
+    } catch (error) {
+      console.warn('检查摄像头可用性时出错，假设摄像头不可用', error);
+      cameraAvailable = false;
+    }
+    
+    console.log('摄像头是否可用:', cameraAvailable);
+    
     // 显示介绍屏幕
     this.ui.showIntro(() => {
       this.startPreparation();
-    });
+    }, cameraAvailable);
     
     // 开始渲染循环
     this.lastTime = 0;
@@ -33,13 +48,27 @@ class SpeechApp {
   }
   
   startPreparation() {
-    this.ui.showPreparation((topic) => {
-      this.startSpeech(topic);
+    this.ui.showPreparation((topic, useCameraOption) => {
+      this.startSpeech(topic, useCameraOption);
     });
   }
   
-  startSpeech(topic) {
-    console.log(`开始演讲，主题: ${topic}`);
+  async startSpeech(topic, useCameraOption = false) {
+    console.log(`开始演讲，主题: ${topic}，使用摄像头: ${useCameraOption}`);
+    
+    // 如果选择使用摄像头，启动摄像头
+    if (useCameraOption) {
+      try {
+        const success = await this.cameraManager.startCapture();
+        if (!success) {
+          console.warn('摄像头启动失败，继续无摄像头模式');
+          alert('摄像头启动失败，将继续无摄像头模式。请检查您的浏览器是否具有摄像头访问权限。');
+        }
+      } catch (error) {
+        console.error('启动摄像头时发生错误:', error);
+        alert('启动摄像头时发生错误，将继续无摄像头模式。');
+      }
+    }
     
     // 启动演讲界面，传入视角切换回调
     this.ui.showSpeech(this.lectureScene.changeViewCallback);
@@ -65,6 +94,14 @@ class SpeechApp {
   }
   
   endSpeech() {
+    // 停止摄像头捕获
+    if (this.cameraManager) {
+      this.cameraManager.stopCapture();
+    }
+    
+    // 清除讲台上的视频
+    this.lectureScene.updatePresenterVideo(null);
+    
     // 模拟评分结果（这里应该是真实分析的结果）
     const result = {
       finalScore: 7.5,
@@ -104,6 +141,18 @@ class SpeechApp {
     // 更新场景
     this.lectureScene.update(deltaTime);
     
+    // 如果摄像头激活，更新视频纹理
+    if (this.cameraManager && this.cameraManager.active) {
+      try {
+        const videoTexture = this.cameraManager.getVideoTexture(THREE);
+        if (videoTexture) {
+          this.lectureScene.updatePresenterVideo(videoTexture);
+        }
+      } catch (e) {
+        console.error('更新视频纹理时出错:', e);
+      }
+    }
+    
     // 渲染场景
     this.lectureScene.renderer.render(this.lectureScene.scene, this.lectureScene.camera);
   }
@@ -112,6 +161,11 @@ class SpeechApp {
     // 清理定时器
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
+    }
+    
+    // 清理摄像头资源
+    if (this.cameraManager) {
+      this.cameraManager.dispose();
     }
     
     // 清理UI资源

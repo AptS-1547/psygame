@@ -352,8 +352,8 @@ class UI {
     });
   }
   
-  showIntro(callback) {
-    // 先隐藏所有屏幕，但不立即执行
+  showIntro(callback, cameraAvailable = false) {
+    // 先隐藏所有屏幕
     this.hideAllScreens();
     
     // 清空之前的内容
@@ -383,6 +383,7 @@ class UI {
       </div>
       
       <p>你将进行一次3分钟的演讲，系统会分析你的表现并给予详细反馈。</p>
+      ${cameraAvailable ? '<p>您可以在下一步中选择是否打开摄像头，将自己融入演讲中。</p>' : ''}
       
       <p style="margin-top: 1.5rem;">准备好开始你的演讲之旅了吗？</p>
     `;
@@ -508,6 +509,84 @@ class UI {
     `;
     contentContainer.appendChild(tipsSection);
     
+    // 添加摄像头选项
+    const cameraSection = document.createElement('div');
+    cameraSection.innerHTML = `
+      <h3 style="color: #1a73e8; margin: 1.5rem 0; font-weight: 400;">摄像头选项</h3>
+      
+      <div class="toggle-container">
+        <label class="toggle-switch">
+          <input type="checkbox" id="camera-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">打开摄像头（将出现在讲台中央）</span>
+      </div>
+    `;
+    
+    // 添加开关样式
+    const style = document.createElement('style');
+    style.textContent = `
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        margin: 1rem 0;
+      }
+      
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+        margin-right: 10px;
+      }
+      
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+      }
+      
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+      }
+      
+      input:checked + .toggle-slider {
+        background-color: #1a73e8;
+      }
+      
+      input:checked + .toggle-slider:before {
+        transform: translateX(26px);
+      }
+      
+      .toggle-label {
+        font-size: 1rem;
+        color: #555;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    contentContainer.appendChild(cameraSection);
+    
     // 添加开始演讲按钮
     const buttonContainer = document.createElement('div');
     buttonContainer.style.display = 'flex';
@@ -525,7 +604,11 @@ class UI {
         } else {
           topicText = topics[selectedTopic].title;
         }
-        callback(topicText);
+        
+        // 获取摄像头选项的值
+        const useCameraOption = document.getElementById('camera-toggle').checked;
+        
+        callback(topicText, useCameraOption);
       } else {
         // 如果没有选择主题，提示用户
         alert('请选择一个演讲主题');
