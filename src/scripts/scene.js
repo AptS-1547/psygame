@@ -399,9 +399,11 @@ class LectureScene {
         side: THREE.DoubleSide 
       });
       
-      // 处理纹理翻转问题 - 摄像头通常需要水平翻转
+      // 修改这里：移除旋转，摄像头已经是正常方向
+      // 处理纹理翻转问题
       texture.center = new THREE.Vector2(0.5, 0.5);
-      texture.rotation = Math.PI; // 旋转180度
+      // 移除旋转180度的代码
+      // texture.rotation = Math.PI; 
       
       // 清理旧材质并应用新材质
       if (this.presenterScreen.material) {

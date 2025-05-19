@@ -133,8 +133,14 @@ class CameraManager {
         this.texture = new THREE.VideoTexture(this.videoElement);
         this.texture.minFilter = THREE.LinearFilter;
         this.texture.magFilter = THREE.LinearFilter;
-        this.texture.format = THREE.RGBFormat; // 使用RGB而不是RGBA可能会更兼容
-        this.texture.colorSpace = THREE.SRGBColorSpace; // 确保正确的颜色空间
+        
+        // 修复 RGBFormat 弃用警告，使用 RGBColorSpace
+        this.texture.format = THREE.RGBAFormat;
+        this.texture.colorSpace = THREE.SRGBColorSpace;
+        
+        // 添加翻转控制 - 水平镜像以匹配自拍效果
+        this.texture.wrapS = THREE.RepeatWrapping;
+        this.texture.repeat.x = -1; // 水平翻转纹理
         
         // 如果是Edge，额外设置
         if (this.isEdge) {
